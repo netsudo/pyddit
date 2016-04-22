@@ -36,3 +36,9 @@ class Request:
 r = Request()
 r.url = 'https://www.reddit.com/r/all'
 print r.titleParse()
+t1 = Thread(target = r.titleParse); t2 = Thread(target=r.urlParse); t3 = Thread(target=r.upVotes)
+
+t1.start(); t2.start(); t3.start(); t1.join(); t2.join(); t3.join()
+#r.titleParse(); r.urlParse(); r.upVotes()
+#for title, url, votes in zip(t1.start(), t2.start(), t3.start()):
+#    print votes + " " + title + "\n" + url
