@@ -2,6 +2,22 @@ import requests
 import lxml.html
 import sys
 import time
+from threading import Thread
+
+class ThreadWithReturnValue(Thread):
+    def __init__(self, group=None, target=None, name=None,
+                 args=(), kwargs={}, Verbose=None):
+        Thread.__init__(self, group, target, name, args, kwargs, Verbose)
+        self._return = None
+
+    def run(self):
+        if self._Thread__target is not None:
+            self._return = self._Thread__target(*self._Thread__args,
+                                                **self._Thread__kwargs)
+
+    def join(self):
+        Thread.join(self)
+        return self._return
 
 class Request:
 
@@ -15,30 +31,30 @@ class Request:
 
         return r.text
 
-    def titleParse(self):
-        tree = lxml.html.fromstring(self.request())
-        titles = tree.xpath('//*/div[2]/p[1]/a/text()')
+def titleParse():
+    tree = lxml.html.fromstring(r.request())
+    titles = tree.xpath('//*/div[2]/p[1]/a/text()')
 
-        return titles
+    return titles
 
-    def urlParse(self):
-        tree = lxml.html.fromstring(self.request())
-        urls = tree.xpath('//*/div[2]/p[1]/a/@href')
+def urlParse():
+    tree = lxml.html.fromstring(r.request())
+    urls = tree.xpath('//*/div[2]/p[1]/a/@href')
 
-        return urls
+    print urls
 
-    def upVotes(self):
-        tree = lxml.html.fromstring(self.request())
-        votes = tree.xpath('//*/div[1]/div[3]/text()')
+def upVotes():
+    tree = lxml.html.fromstring(r.request())
+    votes = tree.xpath('//*/div[1]/div[3]/text()')
 
-        return votes
+    print votes
 
-r = Request()
-r.url = 'https://www.reddit.com/r/all'
-print r.titleParse()
-t1 = Thread(target = r.titleParse); t2 = Thread(target=r.urlParse); t3 = Thread(target=r.upVotes)
+if __name__ == '__main__':
+    r = Request()
+    r.url = 'https://www.reddit.com/r/all'
+    t1 = ThreadWithReturnValue(target = titleParse); t2 = ThreadWithReturnValue(target=urlParse); t3 = ThreadWithReturnValue(target=upVotes)
 
-t1.start(); t2.start(); t3.start(); t1.join(); t2.join(); t3.join()
-#r.titleParse(); r.urlParse(); r.upVotes()
-#for title, url, votes in zip(t1.start(), t2.start(), t3.start()):
-#    print votes + " " + title + "\n" + url
+    t1.start(); t2.start(); t3.start(); t2.join(); t3.join()
+
+    for url in t1.join():
+        print url
