@@ -41,20 +41,20 @@ def urlParse():
     tree = lxml.html.fromstring(r.request())
     urls = tree.xpath('//*/div[2]/p[1]/a/@href')
 
-    print urls
+    return urls
 
 def upVotes():
     tree = lxml.html.fromstring(r.request())
     votes = tree.xpath('//*/div[1]/div[3]/text()')
 
-    print votes
+    return votes
 
 if __name__ == '__main__':
     r = Request()
     r.url = 'https://www.reddit.com/r/all'
     t1 = ThreadWithReturnValue(target = titleParse); t2 = ThreadWithReturnValue(target=urlParse); t3 = ThreadWithReturnValue(target=upVotes)
 
-    t1.start(); t2.start(); t3.start(); t2.join(); t3.join()
+    t1.start(); t2.start(); t3.start()
 
-    for url in t1.join():
-        print url
+    for title, url, votes in zip(t1.join(), t2.join(), t3.join()):
+        print votes + " " + title + " " + "\n" + url
