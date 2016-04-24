@@ -2,24 +2,7 @@ import requests
 import lxml.html
 import sys
 import time
-from threading import Thread
-from itertools import *
-from multiprocessing import Process, Queue
-
-class ThreadWithReturnValue(Thread):
-    def __init__(self, group=None, target=None, name=None,
-                 args=(), kwargs={}, Verbose=None):
-        Thread.__init__(self, group, target, name, args, kwargs, Verbose)
-        self._return = None
-
-    def run(self):
-        if self._Thread__target is not None:
-            self._return = self._Thread__target(*self._Thread__args,
-                                                **self._Thread__kwargs)
-
-    def join(self):
-        Thread.join(self)
-        return self._return
+from multiprocessing.dummy import Pool as ThreadPool
 
 class Request:
 
@@ -33,34 +16,19 @@ class Request:
 
         return r.text
 
-def titleParse(url, que1):
-    tree = lxml.html.fromstring(r.request())
-    titles = tree.xpath('//*/div[2]/p[1]/a/text()')
+def titleParse(url, pool, xpaths):
+    tree = lxml.html.fromstring(url)
 
-    return titles
-
-def urlParse(url, que2):
-    tree = lxml.html.fromstring(r.request())
-    urls = tree.xpath('//*/div[2]/p[1]/a/@href')
-
-    return urls
-
-def upVotes(url, que3):
-    tree = lxml.html.fromstring(r.request())
-    votes = tree.xpath('//*/div[1]/div[3]/text()')
-
-    return votes
+    results = pool.map(tree.xpath, xpaths)
+    for title, url, votes in zip(results[0], results[1], results[2]):
+        print votes + " " + title + " " + "\n" + url
+    pool.close()
+    pool.join()
 
 if __name__ == '__main__':
     r = Request()
     r.url = 'https://www.reddit.com/r/all'
     url = r.request()
-    queue1=Queue(); queue2=Queue(); queue3=Queue()
-    p1 = Process(target = titleParse, args=(url,queue1,)); p2= Process(target=urlParse, args=(url, queue2)); p3 = Process(target=upVotes, args=(url,queue3,))
-    p1.start(); p2.start(); p3.start()
-
-    #t1.start(); t2.start(); t3.start();t1.join();t2.join();t3.join()
-
-    for title, url, votes in izip(queue1.get(), queue2.get(), queue3.get()):
-        print votes + " " + title + " " + "\n" + url
-        p1.join(); p2.join(); p3.join()
+    pool = ThreadPool(6)
+    xpaths = ['//*/div[2]/p[1]/a/text()', '//*/div[2]/p[1]/a/@href', '//*/div[1]/div[3]/text()']
+    titleParse(url, pool, xpaths)
